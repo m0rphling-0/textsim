@@ -6,13 +6,17 @@ mod textsim {
     use std::fs;
 
     pub struct Model{
+        name: String,
         chain: HashMap<String, Vec<String>>,
+        order: u32,
     }
 
     impl Model{
-        pub fn new() -> Self {
+        pub fn new(nm: String, ord: u32) -> Self {
             Model {
-                chain: HashMap::new()
+                name: nm,
+                chain: HashMap::new(),
+                order: ord
             }
         }
         //self note, consider making a corpus set and have entries be references to words in corpus set
@@ -21,6 +25,11 @@ mod textsim {
             for i in 0..text_vec.len() {
                 if !self.chain.contains_key(&text_vec[i]){
                     self.chain.insert(text_vec[i].clone(), Vec::<String>::new());
+                }
+                for j in 0..self.order {
+                    if i + j < text_vec.len() {
+
+                    }
                 }
                 if i > 0 {
                     if let Some(prev) = self.chain.get_mut(&text_vec[i-1]){
@@ -40,4 +49,12 @@ mod textsim {
         }
     }
 
+    struct Word {
+        word: String,
+        count: u32
+    }
+
+    struct Fields {
+        
+    }
 }
