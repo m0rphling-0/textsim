@@ -1,12 +1,9 @@
 //Library for creating simple n-order markov-chain text simulators
 
-#![allow(dead_code)]
 pub mod textsim {
     extern crate rand;
     extern crate serde;
     extern crate serde_json;
-    //#[macro_use]
-    //extern crate serde_derive;
     use serde::{Serialize, Deserialize};
     use rand::Rng;
     use std::path::Path;
@@ -85,35 +82,42 @@ pub mod textsim {
         pub fn process_text(&mut self, path: &Path) -> Result<(), String>{
             match self.file_to_string_vec(path){
                 Ok(text_vec) => {
-                    for i in 0..text_vec.len() {
-                        let cur_word = &text_vec[i];
-                        if self.chain_map.chain_map_insert(cur_word, self.order){
-                            let ch = match cur_word.chars().next() {
-                                Some(c) if c.is_uppercase() => true,
-                                _ => false
-                            };
-                            if ch {
-                                self.start_words.push(cur_word.to_string());
-                            }
-                        }
-                        for j in 0..self.order {
-                            if i + j + 1 < text_vec.len() {
-                                self.chain_map
-                                    .sub_chain_insert(cur_word, &text_vec[i+j+1], j);
-                            }
-                        }
-                    }
+                    self.proc_text(&text_vec);
                     Ok(())
                 },
                 Err(e) => return Err(e)
             }
         }
 
+        fn proc_text(&mut self, text_vec: &Vec<String>) {
+            for i in 0..text_vec.len() {
+                let cur_word = &text_vec[i];
+                if self.chain_map.chain_map_insert(cur_word, self.order){
+                    let ch = match cur_word.chars().next() {
+                        Some(c) if c.is_uppercase() => true,
+                        _ => false
+                    };
+                    if ch {
+                        self.start_words.push(cur_word.to_string());
+                    }
+                }
+                for j in 0..self.order {
+                    if i + j + 1 < text_vec.len() {
+                        self.chain_map
+                            .sub_chain_insert(cur_word, &text_vec[i+j+1], j);
+                    }
+                }
+            }
+        }
+
         pub fn file_to_string_vec(&self, path: &Path) -> Result<Vec<String>, String> {
             if let Ok(text) = fs::read_to_string(path){
+                //create set of chars to strip from strings
+                let strip_set: &[_] = &['(', ')', '"', '`'];
                 //let mut split_string = Vec::new();
-                let mut string_vec   = Vec::new();
-                string_vec = text.split_whitespace()
+                //let mut string_vec   = Vec::new();
+                let mut string_vec = text.split_whitespace()
+                                  .map(|s| s.trim_matches(strip_set))
                                   .map(|s| s.to_string())
                                   .collect();
                 /*for word in string_vec {
@@ -144,6 +148,8 @@ pub mod textsim {
                 let word_nums: Vec<(String, usize)> = join_map.drain().collect();
                 let mut probability_vec = Vec::<usize>::new();
                 let mut prev: usize = 0;
+                //contsruct a roulette wheel distribution to select a word with probability 
+                //proportionate to its number of occurences
                 for word_num in &word_nums {
                     prev += word_num.1;
                     probability_vec.push(prev);
@@ -168,7 +174,7 @@ pub mod textsim {
         }
 
         fn check_punctuation(&self, inString: &str, outVec: &Vec::<String>) {
-            
+            ()
         }
 
         pub fn get_name(&self) -> String {
