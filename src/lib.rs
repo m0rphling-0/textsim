@@ -1,14 +1,19 @@
-//Library for creating simple markov-chain text simulators
+//Library for creating simple n-order markov-chain text simulators
+
 #![allow(dead_code)]
 pub mod textsim {
     extern crate rand;
+    extern crate serde;
+    extern crate serde_json;
+    //#[macro_use]
+    //extern crate serde_derive;
+    use serde::{Serialize, Deserialize};
     use rand::Rng;
     use std::path::Path;
     use std::collections::HashMap;
-    //use std::io::{BufReader,BufRead};
     use std::fs;
     
-    #[derive(Debug)]
+    #[derive(Serialize, Deserialize, Debug)]
     pub struct Chain {
         field: Vec::<HashMap<String, usize>>
     }
@@ -21,7 +26,7 @@ pub mod textsim {
         }
     }    
 
-    #[derive(Debug)]
+    #[derive(Serialize, Deserialize, Debug)]
     pub struct ChainMap {
         c_map: HashMap::<String, Chain>
     }
@@ -53,11 +58,13 @@ pub mod textsim {
         }
 
         pub fn get_sub_chain(&self, key: &str, ord: usize) -> &HashMap<String, usize> {
-            &self.c_map.get(key).unwrap().field[ord]
+            &self.c_map.get(key)
+                       .unwrap()
+                       .field[ord]
         }
     }
 
-    #[derive(Debug)]
+    #[derive(Serialize, Deserialize, Debug)]
     pub struct Model{
         name: String,
         pub chain_map: ChainMap,
@@ -99,10 +106,14 @@ pub mod textsim {
 
         pub fn file_to_string_vec(&self, path: &Path) -> Vec<String> {
             let text = fs::read_to_string(path).expect("File Read Error");
-            let mut string_vec = Vec::new();
+            //let mut split_string = Vec::new();
+            let mut string_vec   = Vec::new();
             string_vec = text.split_whitespace()
                              .map(|s| s.to_string())
                              .collect();
+            /*for word in string_vec {
+                if 
+            }*/
             string_vec
         }
 
@@ -137,6 +148,7 @@ pub mod textsim {
                     }
                 }
             }
+            gen_text.push(".".to_string());
             gen_text
         }
 
@@ -144,6 +156,14 @@ pub mod textsim {
             let mut rng = rand::thread_rng();
             let num: usize = rng.gen_range(0, self.start_words.len());
             self.start_words[num].clone()
+        }
+
+        fn check_punctuation(&self, inString: &str, outVec: &Vec::<String>) {
+            
+        }
+
+        pub fn get_name(&self) -> String {
+            self.name.clone()
         }
     }
 

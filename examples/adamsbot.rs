@@ -5,7 +5,6 @@ use std::collections::HashMap;
 use std::fs::File;
 use std::io::BufReader;
 extern crate serde_json;
-use std::io::stdin;
 //use serde::Deserialize;
 
 fn main() {
@@ -18,43 +17,23 @@ fn main() {
             Err(_) => HashMap::<String, Model>::new()
         };
     }
-    loop {
-        menu_main();
-        let mut input = String::new();
-        stdin().read_line(&mut input).expect("Input read error");
-        let input_match = match input.trim_end() {
-            "1" => create_model(),
-            "2" => load_model(),
-            "3" => delete_model(),
-            "4" => break
-        };
+    if models.is_empty(){
+        let modl = Model::new("Adams".to_string(), 2);
+        models.insert(modl.get_name(), modl);
+        models.get_mut("Adams")
+              .unwrap()
+              .process_text(Path::new("1825-Adams.txt"));
+        models.get_mut("Adams")
+              .unwrap()
+              .process_text(Path::new("1797-Adams.txt"));
     }
-    
     
     let text = models.get_mut("Adams")
                      .unwrap()
                      .generate_text(25);
     println!("{:?}", &text);
-
     let file = File::create("models.json")
                     .expect("No such file");
-
     serde_json::to_writer(file, &models)
                 .expect("Could not create writer");
 }
-
-fn menu_main() {
-    println!("RoboText Main Menu\n");
-    println!("Select an Option");
-    println!("1 - Create New Model");
-    println!("2 - Use Saved Model");
-    println!("3 - Delete Model");
-    println!("4 - Quit");
-    println!("Enter option number");
-}
-
-/*fn create_model() -> Model {
-    println!("Enter a name for your Model");
-
-    
-}*/
