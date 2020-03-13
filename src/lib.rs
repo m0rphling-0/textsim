@@ -82,39 +82,48 @@ pub mod textsim {
             }
         }
     
-        pub fn process_text(&mut self, path: &Path) {
-            let text_vec: Vec<String> = self.file_to_string_vec(path);
-            for i in 0..text_vec.len() {
-                let cur_word = &text_vec[i];
-                if self.chain_map.chain_map_insert(cur_word, self.order){
-                    let ch = match cur_word.chars().next() {
-                        Some(c) if c.is_uppercase() => true,
-                        _ => false
-                    };
-                    if ch {
-                        self.start_words.push(cur_word.to_string());
+        pub fn process_text(&mut self, path: &Path) -> Result<(), String>{
+            match self.file_to_string_vec(path){
+                Ok(text_vec) => {
+                    for i in 0..text_vec.len() {
+                        let cur_word = &text_vec[i];
+                        if self.chain_map.chain_map_insert(cur_word, self.order){
+                            let ch = match cur_word.chars().next() {
+                                Some(c) if c.is_uppercase() => true,
+                                _ => false
+                            };
+                            if ch {
+                                self.start_words.push(cur_word.to_string());
+                            }
+                        }
+                        for j in 0..self.order {
+                            if i + j + 1 < text_vec.len() {
+                                self.chain_map
+                                    .sub_chain_insert(cur_word, &text_vec[i+j+1], j);
+                            }
+                        }
                     }
-                }
-                for j in 0..self.order {
-                    if i + j + 1 < text_vec.len() {
-                        self.chain_map
-                            .sub_chain_insert(cur_word, &text_vec[i+j+1], j);
-                    }
-                }
+                    Ok(())
+                },
+                Err(e) => return Err(e)
             }
         }
 
-        pub fn file_to_string_vec(&self, path: &Path) -> Vec<String> {
-            let text = fs::read_to_string(path).expect("File Read Error");
-            //let mut split_string = Vec::new();
-            let mut string_vec   = Vec::new();
-            string_vec = text.split_whitespace()
-                             .map(|s| s.to_string())
-                             .collect();
-            /*for word in string_vec {
-                if 
-            }*/
-            string_vec
+        pub fn file_to_string_vec(&self, path: &Path) -> Result<Vec<String>, String> {
+            if let Ok(text) = fs::read_to_string(path){
+                //let mut split_string = Vec::new();
+                let mut string_vec   = Vec::new();
+                string_vec = text.split_whitespace()
+                                  .map(|s| s.to_string())
+                                  .collect();
+                /*for word in string_vec {
+                    if 
+                }*/
+                Ok(string_vec)
+            }
+            else{
+                Err("File Read Error".to_owned())
+            }
         }
 
         pub fn generate_text(&self, length: usize) -> Vec<String> {
